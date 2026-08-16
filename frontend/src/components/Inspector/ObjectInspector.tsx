@@ -25,12 +25,14 @@ import VideocamIcon from "@mui/icons-material/Videocam";
 import TuneIcon from "@mui/icons-material/Tune";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 
 import { useSceneStore } from "../../store/sceneStore";
 import { ObjectType } from "../../models/ObjectType";
 import { CameraObject } from "../../models/CameraObject";
 import { useEditorStore } from "../../store/editorStore";
 import CameraPresetPopup from "../Camera/CameraPresetPopup";
+import CctvLiveFeedModal from "../Camera/CctvLiveFeedModal";
 
 
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -45,6 +47,7 @@ export default function ObjectInspector() {
     const toggleInspector = useEditorStore((state) => state.toggleInspector);
 
     const [presetOpen, setPresetOpen] = useState(false);
+    const [liveFeedOpen, setLiveFeedOpen] = useState(false);
     const [wallMounted, setWallMounted] = useState(true);
 
     const object = objects.find((item) => item.id === selected);
@@ -122,10 +125,7 @@ export default function ObjectInspector() {
         ? ((cameraObj.horizontalFov * 180) / Math.PI).toFixed(1)
         : "0";
     const vFovDeg = cameraObj
-        ? (
-              (2 * Math.atan(cameraObj.sensorHeight / (2 * cameraObj.focalLength)) * 180) /
-              Math.PI
-          ).toFixed(1)
+        ? ((cameraObj.verticalFov * 180) / Math.PI).toFixed(1)
         : "0";
 
     return (
@@ -339,7 +339,7 @@ export default function ObjectInspector() {
                                 size="small"
                                 label="SX"
                                 type="number"
-                                value={parseFloat(object.scale.x.toFixed(2))}
+                                value={object.scale.x}
                                 onChange={(e) => handleScaleChange("x", parseFloat(e.target.value))}
                                 slotProps={{
                                     inputLabel: { style: { color: "#b0b8c4" } },
@@ -352,7 +352,7 @@ export default function ObjectInspector() {
                                 size="small"
                                 label="SY"
                                 type="number"
-                                value={parseFloat(object.scale.y.toFixed(2))}
+                                value={object.scale.y}
                                 onChange={(e) => handleScaleChange("y", parseFloat(e.target.value))}
                                 slotProps={{
                                     inputLabel: { style: { color: "#b0b8c4" } },
@@ -365,7 +365,7 @@ export default function ObjectInspector() {
                                 size="small"
                                 label="SZ"
                                 type="number"
-                                value={parseFloat(object.scale.z.toFixed(2))}
+                                value={object.scale.z}
                                 onChange={(e) => handleScaleChange("z", parseFloat(e.target.value))}
                                 slotProps={{
                                     inputLabel: { style: { color: "#b0b8c4" } },
@@ -386,11 +386,20 @@ export default function ObjectInspector() {
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                 <VideocamIcon fontSize="small" sx={{ color: "#4fc3f7" }} />
                                 <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: "13px" }}>
-                                    Optical Simulation
+                                    Optical Simulation & Live Feed
                                 </Typography>
                             </Box>
                         </AccordionSummary>
                         <AccordionDetails sx={{ pt: 0 }}>
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                startIcon={<PhotoCameraIcon />}
+                                onClick={() => setLiveFeedOpen(true)}
+                                sx={{ mb: 1.5, backgroundColor: "#76ff03", color: "#000000", fontWeight: 700, textTransform: "none", fontSize: "12px", "&:hover": { backgroundColor: "#64dd17" } }}
+                            >
+                                Open CCTV Live Feed & Capture Snapshot
+                            </Button>
                             <Grid container spacing={1}>
                                 <Grid size={6}>
                                     <TextField
@@ -471,6 +480,28 @@ export default function ObjectInspector() {
                                     }
                                 />
                             </Box>
+                        </AccordionDetails>
+                    </Accordion>
+
+                    {/* Camera Presets & ROI Management Menu */}
+                    <Accordion defaultExpanded sx={{ backgroundColor: "#252a30", color: "#ffffff" }}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "#ffffff" }} />}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                <BookmarkIcon fontSize="small" sx={{ color: "#ffb74d" }} />
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: "13px" }}>
+                                    Camera Preset & ROI Management
+                                </Typography>
+                            </Box>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ pt: 0 }}>
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                onClick={() => setPresetOpen(true)}
+                                sx={{ textTransform: "none", color: "#ffb74d", borderColor: "#ffb74d", fontWeight: 600, fontSize: "12px" }}
+                            >
+                                Open Preset & ROI Manager
+                            </Button>
                         </AccordionDetails>
                     </Accordion>
 
@@ -572,39 +603,24 @@ export default function ObjectInspector() {
                             </Box>
                         </AccordionDetails>
                     </Accordion>
-
-                    {/* Camera Presets Menu */}
-                    <Accordion defaultExpanded sx={{ backgroundColor: "#252a30", color: "#ffffff" }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "#ffffff" }} />}>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                <BookmarkIcon fontSize="small" sx={{ color: "#ffb74d" }} />
-                                <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: "13px" }}>
-                                    Presets & Positioning
-                                </Typography>
-                            </Box>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ pt: 0 }}>
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                color="primary"
-                                size="small"
-                                startIcon={<BookmarkIcon />}
-                                sx={{ textTransform: "none" }}
-                                onClick={() => setPresetOpen(true)}
-                            >
-                                Open Camera Presets
-                            </Button>
-                        </AccordionDetails>
-                    </Accordion>
-
-                    {/* Preset Modal */}
-                    <CameraPresetPopup
-                        open={presetOpen}
-                        onClose={() => setPresetOpen(false)}
-                        camera={cameraObj}
-                    />
                 </>
+            )}
+
+            {/* Dialog Popups */}
+            {cameraObj && presetOpen && (
+                <CameraPresetPopup
+                    open={presetOpen}
+                    onClose={() => setPresetOpen(false)}
+                    camera={cameraObj}
+                />
+            )}
+
+            {cameraObj && liveFeedOpen && (
+                <CctvLiveFeedModal
+                    open={liveFeedOpen}
+                    onClose={() => setLiveFeedOpen(false)}
+                    camera={cameraObj}
+                />
             )}
         </Box>
     );

@@ -6,17 +6,10 @@ interface Props {
     url: string;
 }
 
-// Persistent cache for cloned GLB scenes to avoid CPU re-cloning freezes
-const sceneCache = new Map<string, THREE.Group>();
-
 function GltfComponent({ url }: Props) {
     const gltf = useGLTF(url);
 
     const modelScene = useMemo(() => {
-        if (sceneCache.has(url)) {
-            return sceneCache.get(url)!;
-        }
-
         const clone = gltf.scene.clone(true);
         clone.traverse((node) => {
             if ((node as THREE.Mesh).isMesh) {
@@ -52,7 +45,6 @@ function GltfComponent({ url }: Props) {
         const containerGroup = new THREE.Group();
         containerGroup.add(clone);
 
-        sceneCache.set(url, containerGroup);
         return containerGroup;
     }, [gltf, url]);
 
