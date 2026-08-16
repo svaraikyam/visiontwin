@@ -1,19 +1,13 @@
-export enum ObjectType {
+export const ObjectType = {
+    GROUP: "GROUP",
+    MODEL: "MODEL",
+    CAMERA: "CAMERA",
+    LIGHT: "LIGHT",
+    SENSOR: "SENSOR",
+    PERSON: "PERSON",
+    ROBOT: "ROBOT",
+    DRONE: "DRONE",
+    ZONE: "ZONE",
+} as const;
 
-    GROUP = "GROUP",
-
-    MODEL = "MODEL",
-
-    CAMERA = "CAMERA",
-
-    LIGHT = "LIGHT",
-
-    SENSOR = "SENSOR",
-
-    PERSON = "PERSON",
-
-    ROBOT = "ROBOT",
-
-    DRONE = "DRONE"
-
-}
+export type ObjectType = (typeof ObjectType)[keyof typeof ObjectType];
