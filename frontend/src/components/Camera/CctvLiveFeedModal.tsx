@@ -63,11 +63,12 @@ function CameraViewRenderer({ camera }: { camera: CameraObject }) {
     useFrame(() => {
         threeCam.position.copy(camera.position);
         threeCam.rotation.copy(camera.rotation);
-        if ((threeCam as THREE.PerspectiveCamera).fov) {
+        if ((threeCam as THREE.PerspectiveCamera).isPerspectiveCamera) {
             const pCam = threeCam as THREE.PerspectiveCamera;
-            const hFovDeg = (camera.horizontalFov * 180) / Math.PI;
-            if (Math.abs(pCam.fov - hFovDeg) > 0.1) {
-                pCam.fov = hFovDeg;
+            // Three.js PerspectiveCamera expects VERTICAL FOV in degrees!
+            const vFovDeg = (camera.verticalFov * 180) / Math.PI;
+            if (Math.abs(pCam.fov - vFovDeg) > 0.01) {
+                pCam.fov = vFovDeg;
                 pCam.updateProjectionMatrix();
             }
         }
@@ -133,6 +134,17 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
             setActivePalette(camera.thermalPalette);
         }
     }, [camera.thermalPalette]);
+
+    // Handle Mouse Wheel Zoom on CCTV Video Box
+    const handleWheelZoom = (e: React.WheelEvent) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 3.0 : -3.0; // Scroll up = zoom in (+focal), Scroll down = zoom out (-focal)
+        updateObject(camera.id, (obj) => {
+            const cam = obj as CameraObject;
+            const newFocal = Math.max(2.0, Math.min(200.0, cam.focalLength + delta));
+            cam.focalLength = parseFloat(newFocal.toFixed(1));
+        });
+    };
 
     // Handle Window Dragging
     const handleWindowMouseDown = (e: React.MouseEvent) => {
@@ -213,6 +225,8 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
     const sensorResW = 1920; // 1080p surveillance standard
     const ppm = (sensorResW / parseFloat(footprintW)).toFixed(0);
 
+    const zoomMultiplier = (camera.focalLength / 4.0).toFixed(1); // Baseline 4.0mm = 1x
+
     let doriQuality = "Detection (PPM < 62)";
     const numericPpm = parseFloat(ppm);
     if (numericPpm >= 250) doriQuality = "Identification (PPM ≥ 250)";
@@ -227,8 +241,15 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
             const newPan = cam.rotation.y + (dPan * Math.PI) / 180;
             cam.rotation.set(newTilt, newPan, cam.rotation.z);
             if (dFocal !== 0) {
-                cam.focalLength = Math.max(1.0, Math.min(100.0, cam.focalLength + dFocal));
+                cam.focalLength = Math.max(2.0, Math.min(200.0, cam.focalLength + dFocal));
             }
+        });
+    };
+
+    // Quick Zoom Presets
+    const setZoomPreset = (focalMm: number) => {
+        updateObject(camera.id, (obj) => {
+            (obj as CameraObject).focalLength = focalMm;
         });
     };
 
@@ -324,7 +345,7 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
                     <Typography variant="h6" sx={{ fontSize: "15px", fontWeight: 600 }}>
                         Live CCTV Feed & Optics — {camera.name}
                     </Typography>
-                    <Chip label="FLOATING VIEW" size="small" sx={{ height: 18, fontSize: "9px", backgroundColor: "#1976d2", color: "#ffffff", ml: 1 }} />
+                    <Chip label={`${zoomMultiplier}x ZOOM`} size="small" sx={{ height: 18, fontSize: "9px", backgroundColor: "#76ff03", color: "#000000", fontWeight: 700, ml: 1 }} />
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Button
@@ -348,6 +369,7 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
                     <Grid size={7}>
                         <Paper
                             ref={canvasRef}
+                            onWheel={handleWheelZoom}
                             onPointerDown={handleFeedPointerDown}
                             onPointerMove={handleFeedPointerMove}
                             onPointerUp={handleFeedPointerUp}
@@ -366,7 +388,7 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
                             <Canvas
                                 camera={{
                                     position: [camera.position.x, camera.position.y, camera.position.z],
-                                    fov: hFovDeg,
+                                    fov: vFovDeg, // Pass Vertical FOV in degrees to Three.js PerspectiveCamera
                                 }}
                                 gl={{ preserveDrawingBuffer: true }}
                             >
@@ -388,13 +410,13 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
                                 }}
                             >
                                 <Typography variant="caption" sx={{ color: "#76ff03", fontWeight: 700, display: "block" }}>
-                                    ● LIVE REAL-TIME FEED
+                                    ● LIVE REAL-TIME FEED ({zoomMultiplier}x Zoom)
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: "#ffffff", fontSize: "10px" }}>
-                                    Depth: {targetDepth}m | PPM: {ppm} ({doriQuality.split(" ")[0]})
+                                    Depth: {targetDepth}m | Focal: {camera.focalLength.toFixed(1)}mm | PPM: {ppm} ({doriQuality.split(" ")[0]})
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: "#b0b8c4", fontSize: "9px", display: "block" }}>
-                                    Drag on video to Pan/Tilt CCTV
+                                    Scroll Wheel to Zoom In/Out | Drag Video to Pan/Tilt
                                 </Typography>
                             </Box>
 
@@ -475,14 +497,41 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
                         </Box>
                     </Grid>
 
-                    {/* Right: PTZ Nudge Pad, Target Depth Slider & Live Optics Summary */}
+                    {/* Right: PTZ Nudge Pad, Optical Zoom Controls & Live Optics Summary */}
                     <Grid size={5}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#4fc3f7", mb: 1 }}>
-                            Live Optics & Target Depth
+                        {/* Interactive Optical Zoom & Magnification Controls */}
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#76ff03", mb: 1 }}>
+                            Optical Zoom & Telephoto Control ({zoomMultiplier}x Zoom)
                         </Typography>
+                        <Box sx={{ px: 1.5, py: 1.5, backgroundColor: "#252a30", borderRadius: "6px", mb: 1.5, border: "1px solid #3b4148" }}>
+                            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                                <Typography variant="caption" sx={{ color: "#b0b8c4" }}>
+                                    Focal Length (Zoom):
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: "#76ff03", fontWeight: 700 }}>
+                                    {camera.focalLength.toFixed(1)} mm ({zoomMultiplier}x)
+                                </Typography>
+                            </Box>
+                            <Slider
+                                size="small"
+                                min={2.0}
+                                max={150.0}
+                                step={1.0}
+                                value={camera.focalLength}
+                                onChange={(_, val) => setZoomPreset(val as number)}
+                                sx={{ color: "#76ff03" }}
+                            />
+                            {/* Quick Zoom Presets */}
+                            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 1 }}>
+                                <Chip label="1x (4mm)" size="small" onClick={() => setZoomPreset(4.0)} sx={{ height: 18, fontSize: "9px", cursor: "pointer", backgroundColor: camera.focalLength === 4 ? "#76ff03" : "#1e2228", color: camera.focalLength === 4 ? "#000000" : "#ffffff", fontWeight: 700 }} />
+                                <Chip label="5x (20mm)" size="small" onClick={() => setZoomPreset(20.0)} sx={{ height: 18, fontSize: "9px", cursor: "pointer", backgroundColor: camera.focalLength === 20 ? "#76ff03" : "#1e2228", color: camera.focalLength === 20 ? "#000000" : "#ffffff", fontWeight: 700 }} />
+                                <Chip label="10x (40mm)" size="small" onClick={() => setZoomPreset(40.0)} sx={{ height: 18, fontSize: "9px", cursor: "pointer", backgroundColor: camera.focalLength === 40 ? "#76ff03" : "#1e2228", color: camera.focalLength === 40 ? "#000000" : "#ffffff", fontWeight: 700 }} />
+                                <Chip label="25x (100mm)" size="small" onClick={() => setZoomPreset(100.0)} sx={{ height: 18, fontSize: "9px", cursor: "pointer", backgroundColor: camera.focalLength === 100 ? "#76ff03" : "#1e2228", color: camera.focalLength === 100 ? "#000000" : "#ffffff", fontWeight: 700 }} />
+                            </Box>
+                        </Box>
 
                         {/* Target Depth Slider */}
-                        <Box sx={{ px: 1, py: 1, backgroundColor: "#252a30", borderRadius: "6px", mb: 2 }}>
+                        <Box sx={{ px: 1.5, py: 1, backgroundColor: "#252a30", borderRadius: "6px", mb: 1.5, border: "1px solid #3b4148" }}>
                             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
                                 <Typography variant="caption" sx={{ color: "#b0b8c4" }}>
                                     Target Distance (Depth):
@@ -508,7 +557,7 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
                         </Box>
 
                         {/* Optics Metrics Grid */}
-                        <Grid container spacing={1} sx={{ mb: 2 }}>
+                        <Grid container spacing={1} sx={{ mb: 1.5 }}>
                             <Grid size={6}>
                                 <Paper sx={{ p: 1, backgroundColor: "#252a30", border: "1px solid #343a40" }}>
                                     <Typography variant="caption" sx={{ color: "#8b949e", display: "block" }}>
@@ -542,10 +591,10 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
                         </Grid>
 
                         {/* PTZ Nudge Control Pad */}
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#ffb74d", mb: 1 }}>
-                            Live PTZ Nudge Control
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#ffb74d", mb: 0.5 }}>
+                            Live PTZ Nudge Pad
                         </Typography>
-                        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5, backgroundColor: "#252a30", p: 1, borderRadius: "6px" }}>
+                        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5, backgroundColor: "#252a30", p: 1, borderRadius: "6px", border: "1px solid #3b4148" }}>
                             <IconButton size="small" onClick={() => handleNudge(0, 5, 0)} sx={{ color: "#ffffff" }}>
                                 <ArrowUpwardIcon fontSize="small" />
                             </IconButton>
@@ -561,11 +610,11 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
                                 <ArrowDownwardIcon fontSize="small" />
                             </IconButton>
                             <Box sx={{ display: "flex", gap: 1, mt: 0.5 }}>
-                                <Button size="small" variant="outlined" startIcon={<ZoomInIcon />} onClick={() => handleNudge(0, 0, -0.5)} sx={{ fontSize: "10px", color: "#4fc3f7" }}>
-                                    Zoom In
+                                <Button size="small" variant="outlined" startIcon={<ZoomInIcon />} onClick={() => handleNudge(0, 0, 10.0)} sx={{ fontSize: "10px", color: "#76ff03", borderColor: "#76ff03" }}>
+                                    Zoom In (+10mm)
                                 </Button>
-                                <Button size="small" variant="outlined" startIcon={<ZoomOutIcon />} onClick={() => handleNudge(0, 0, 0.5)} sx={{ fontSize: "10px", color: "#4fc3f7" }}>
-                                    Zoom Out
+                                <Button size="small" variant="outlined" startIcon={<ZoomOutIcon />} onClick={() => handleNudge(0, 0, -10.0)} sx={{ fontSize: "10px", color: "#4fc3f7" }}>
+                                    Zoom Out (-10mm)
                                 </Button>
                             </Box>
                         </Box>
@@ -676,3 +725,4 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
         </Dialog>
     );
 }
+
