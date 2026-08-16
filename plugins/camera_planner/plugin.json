@@ -1,0 +1,10 @@
+{
+    "id": "camera_planner",
+    "name": "Camera Planner",
+    "version": "1.0.0",
+    "author": "VisionTwin",
+    "description": "Industrial camera planning plugin",
+
+    "backend": true,
+    "frontend": true
+}

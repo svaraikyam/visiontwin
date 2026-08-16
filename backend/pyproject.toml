@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "visiontwin-backend"
+version = "0.1.0"
+description = "VisionTwin Backend Framework"
+readme = "README.md"
+requires-python = ">=3.12"
+
+authors = [
+    { name = "Atul Vaish" }
+]
+
+dependencies = [
+    "fastapi>=0.116",
+    "uvicorn[standard]>=0.35",
+    "pydantic>=2.11",
+    "python-dotenv>=1.1",
+    "orjson>=3.11",
+]
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
