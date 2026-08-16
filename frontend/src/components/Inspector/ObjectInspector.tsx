@@ -33,6 +33,8 @@ import { useEditorStore } from "../../store/editorStore";
 import CameraPresetPopup from "../Camera/CameraPresetPopup";
 
 
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+
 export default function ObjectInspector() {
     const objects = useSceneStore((state) => state.objects);
     const selected = useSceneStore((state) => state.selected);
@@ -40,6 +42,7 @@ export default function ObjectInspector() {
 
     const showCameraFrustum = useEditorStore((state) => state.showCameraFrustum);
     const toggleCameraFrustum = useEditorStore((state) => state.toggleCameraFrustum);
+    const toggleInspector = useEditorStore((state) => state.toggleInspector);
 
     const [presetOpen, setPresetOpen] = useState(false);
     const [wallMounted, setWallMounted] = useState(true);
@@ -49,9 +52,16 @@ export default function ObjectInspector() {
     if (!object) {
         return (
             <Box sx={{ p: 2, color: "#ffffff" }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                    Object Inspector
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Object Inspector
+                    </Typography>
+                    <Tooltip title="Hide Inspector Panel">
+                        <IconButton size="small" onClick={toggleInspector} sx={{ color: "#8b949e" }}>
+                            <ChevronRightIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
                 <Typography variant="body2" sx={{ color: "#8b949e", fontStyle: "italic", mt: 2 }}>
                     Select an object in the scene or tree to view and edit properties.
                 </Typography>
@@ -121,13 +131,20 @@ export default function ObjectInspector() {
     return (
         <Box sx={{ height: "100%", overflowY: "auto", color: "#ffffff" }}>
             {/* Header */}
-            <Box sx={{ p: 2, borderBottom: "1px solid #343a40" }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, letterSpacing: 0.5 }}>
-                    Object Inspector
-                </Typography>
-                <Typography variant="caption" sx={{ color: "#8b949e", display: "block" }}>
-                    ID: {object.id.substring(0, 8)}...
-                </Typography>
+            <Box sx={{ p: 2, borderBottom: "1px solid #343a40", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, letterSpacing: 0.5 }}>
+                        Object Inspector
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#8b949e", display: "block" }}>
+                        ID: {object.id.substring(0, 8)}...
+                    </Typography>
+                </Box>
+                <Tooltip title="Hide Inspector Panel">
+                    <IconButton size="small" onClick={toggleInspector} sx={{ color: "#8b949e", "&:hover": { color: "#ffffff" } }}>
+                        <ChevronRightIcon />
+                    </IconButton>
+                </Tooltip>
             </Box>
 
             {/* Section 1: Object Identity */}

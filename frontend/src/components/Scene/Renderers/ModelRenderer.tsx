@@ -11,7 +11,9 @@ export default function ModelRenderer({ object }: Props) {
         <group
             onClick={(e) => {
                 e.stopPropagation();
-                useSceneStore.getState().selectObject(object.id);
+                if (!object.selected) {
+                    useSceneStore.getState().selectObject(object.id);
+                }
             }}
         >
             {object.modelPath ? (

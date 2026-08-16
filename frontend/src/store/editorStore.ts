@@ -13,6 +13,8 @@ export interface EditorState {
     toggleAxes: () => void;
     showCameraFrustum: boolean;
     toggleCameraFrustum: () => void;
+    showInspector: boolean;
+    toggleInspector: () => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -26,4 +28,6 @@ export const useEditorStore = create<EditorState>((set) => ({
     toggleAxes: () => set((state) => ({ showAxes: !state.showAxes })),
     showCameraFrustum: false,
     toggleCameraFrustum: () => set((state) => ({ showCameraFrustum: !state.showCameraFrustum })),
+    showInspector: true,
+    toggleInspector: () => set((state) => ({ showInspector: !state.showInspector })),
 }));

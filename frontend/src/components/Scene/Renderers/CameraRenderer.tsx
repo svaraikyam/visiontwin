@@ -14,7 +14,9 @@ export default function CameraRenderer({ object }: Props) {
         <group
             onClick={(e) => {
                 e.stopPropagation();
-                useSceneStore.getState().selectObject(object.id);
+                if (!object.selected) {
+                    useSceneStore.getState().selectObject(object.id);
+                }
             }}
         >
             {/* Main CCTV Housing Body (Bullet Style) */}

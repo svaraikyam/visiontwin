@@ -2,7 +2,7 @@
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { Grid } from "@react-three/drei";
-import { useState } from "react";
+
 
 import { useSceneStore } from "../../store/sceneStore";
 import { useEditorStore } from "../../store/editorStore";
@@ -34,7 +34,6 @@ export default function SceneCanvas() {
     const objects = useSceneStore((state) => state.objects);
     const showGrid = useEditorStore((state) => state.showGrid);
     const showAxes = useEditorStore((state) => state.showAxes);
-    const [orbitEnabled, setOrbitEnabled] = useState(true);
 
     return (
         <div
@@ -94,13 +93,12 @@ export default function SceneCanvas() {
                     <ObjectRenderer
                         key={object.id}
                         object={object}
-                        onTransformDragging={(dragging) => setOrbitEnabled(!dragging)}
                     />
                 ))}
 
                 {showAxes && <axesHelper args={[5]} />}
 
-                <ViewportControls enabled={orbitEnabled} />
+                <ViewportControls />
 
                 <NavigationGizmo />
             </Canvas>
