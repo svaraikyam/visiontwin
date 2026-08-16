@@ -390,7 +390,11 @@ export default function CctvLiveFeedModal({ open, onClose, camera }: Props) {
                                     position: [camera.position.x, camera.position.y, camera.position.z],
                                     fov: vFovDeg, // Pass Vertical FOV in degrees to Three.js PerspectiveCamera
                                 }}
-                                gl={{ preserveDrawingBuffer: true }}
+                                gl={{
+                                    preserveDrawingBuffer: true,
+                                    precision: "mediump",
+                                    logarithmicDepthBuffer: true,
+                                }}
                             >
                                 <CameraViewRenderer camera={camera} />
                             </Canvas>

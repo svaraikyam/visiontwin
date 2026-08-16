@@ -13,8 +13,22 @@ function GltfComponent({ url }: Props) {
         const clone = gltf.scene.clone(true);
         clone.traverse((node) => {
             if ((node as THREE.Mesh).isMesh) {
-                node.castShadow = true;
-                node.receiveShadow = true;
+                const mesh = node as THREE.Mesh;
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+
+                // Fix for CPU / Software WebGL Renderers (SwiftShader / ANGLE on Windows):
+                // Recompute vertex normals and bounds to fix geometry fragmentation and tearing glitches
+                if (mesh.geometry) {
+                    mesh.geometry.computeVertexNormals();
+                    mesh.geometry.computeBoundingBox();
+                    mesh.geometry.computeBoundingSphere();
+                }
+
+                if (mesh.material) {
+                    const mat = mesh.material as THREE.MeshStandardMaterial;
+                    mat.side = THREE.DoubleSide; // Ensure double-sided rendering so thin structures don't fragment
+                }
             }
         });
 

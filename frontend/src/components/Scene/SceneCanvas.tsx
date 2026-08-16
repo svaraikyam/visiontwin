@@ -53,9 +53,10 @@ export default function SceneCanvas() {
                 }}
                 gl={{
                     antialias: true,
-                    powerPreference: "high-performance",
-                    precision: "highp",
+                    powerPreference: "default",
+                    precision: "mediump",
                     preserveDrawingBuffer: true,
+                    logarithmicDepthBuffer: true, // Fixes depth buffer z-fighting fragmentation on CPU software renderers
                 }}
                 onCreated={({ gl }) => {
                     gl.outputColorSpace = THREE.SRGBColorSpace;
