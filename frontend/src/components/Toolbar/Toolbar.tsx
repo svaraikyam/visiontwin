@@ -13,33 +13,33 @@ export default function Toolbar() {
             position="static"
             elevation={0}
             sx={{
-                height: "48px",
+                height: "56px",
                 backgroundColor: "#1976d2",
             }}
         >
             <MuiToolbar
-                variant="dense"
                 sx={{
-                    height: "48px",
-                    minHeight: "48px",
+                    height: "56px",
+                    minHeight: "56px",
 
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
 
-                    px: 1,
+                    px: 2,
 
-                    gap: 0.5,
+                    gap: 1,
                 }}
             >
 
                 <Typography
                     variant="h6"
                     sx={{
-                        fontSize: "16px",
-                        fontWeight: 600,
+                        fontSize: "18px",
+                        fontWeight: 700,
+                        letterSpacing: 0.5,
 
-                        mr: 2,
+                        mr: 3,
 
                         whiteSpace: "nowrap",
                     }}

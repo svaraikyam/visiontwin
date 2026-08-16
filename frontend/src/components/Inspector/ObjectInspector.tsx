@@ -287,6 +287,46 @@ export default function ObjectInspector() {
                         </Grid>
                     </Grid>
 
+                    {/* Quick Rotation Alignment Action Buttons */}
+                    <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
+                        <Button
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            onClick={() => {
+                                updateObject(object.id, (obj) => {
+                                    obj.rotation.set(0, 0, 0);
+                                });
+                            }}
+                            sx={{
+                                fontSize: "11px",
+                                color: "#ffb74d",
+                                borderColor: "#ffb74d",
+                                "&:hover": { borderColor: "#ffa726", backgroundColor: "rgba(255, 183, 77, 0.08)" },
+                            }}
+                        >
+                            Zero Rotation
+                        </Button>
+                        <Button
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            onClick={() => {
+                                updateObject(object.id, (obj) => {
+                                    obj.rotation.set(-Math.PI / 2, 0, 0);
+                                });
+                            }}
+                            sx={{
+                                fontSize: "11px",
+                                color: "#4fc3f7",
+                                borderColor: "#4fc3f7",
+                                "&:hover": { borderColor: "#29b6f6", backgroundColor: "rgba(79, 195, 247, 0.08)" },
+                            }}
+                        >
+                            Align Flat (-90° X)
+                        </Button>
+                    </Box>
+
                     <Divider sx={{ my: 1.5, borderColor: "#343a40" }} />
 
                     {/* Scale X, Y, Z */}

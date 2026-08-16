@@ -48,6 +48,7 @@ export default function MainMenu() {
 
         const modelObj = new ModelObject(name, url);
         modelObj.position.set(0, 0, 0);
+        modelObj.rotation.set(0, 0, 0);
         useSceneStore.getState().addObject(modelObj);
 
         e.target.value = "";
@@ -120,8 +121,14 @@ export default function MainMenu() {
                     sx={{
                         textTransform: "none",
                         minWidth: "auto",
-                        px: 1.2,
-                        fontSize: "13px",
+                        px: 1.8,
+                        py: 0.8,
+                        fontSize: "18px",
+                        fontWeight: 500,
+                        letterSpacing: 0.3,
+                        "&:hover": {
+                            backgroundColor: "rgba(255, 255, 255, 0.12)",
+                        },
                     }}
                 >
                     {menu.label}
@@ -147,7 +154,9 @@ export default function MainMenu() {
                         key={item.label}
                         onClick={() => handleAction(item.action)}
                         sx={{
-                            fontSize: "13px",
+                            fontSize: "14px",
+                            py: 1,
+                            px: 2,
                             "&:hover": {
                                 backgroundColor: "#1976d2",
                             },

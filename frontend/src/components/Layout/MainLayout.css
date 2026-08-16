@@ -5,7 +5,7 @@
     display: grid;
 
     grid-template-rows:
-        48px
+        56px
         minmax(0, 1fr)
         26px;
 
