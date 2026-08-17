@@ -374,6 +374,28 @@ export default function ObjectInspector() {
                             />
                         </Grid>
                     </Grid>
+
+                    {/* Quick Scale Normalization Action */}
+                    <Box sx={{ mt: 1 }}>
+                        <Button
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            onClick={() => {
+                                updateObject(object.id, (obj) => {
+                                    obj.scale.set(0.2, 0.2, 0.2);
+                                });
+                            }}
+                            sx={{
+                                fontSize: "11px",
+                                color: "#76ff03",
+                                borderColor: "#76ff03",
+                                "&:hover": { borderColor: "#64dd17", backgroundColor: "rgba(118, 255, 3, 0.08)" },
+                            }}
+                        >
+                            Fit to Viewport (Scale 0.2x)
+                        </Button>
+                    </Box>
                 </AccordionDetails>
             </Accordion>
 

@@ -17,17 +17,20 @@ function GltfComponent({ url }: Props) {
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
 
-                // Fix for CPU / Software WebGL Renderers (SwiftShader / ANGLE on Windows):
-                // Recompute vertex normals and bounds to fix geometry fragmentation and tearing glitches
+                // PRESERVE IMPORTED NORMALS:
+                // Only compute vertex normals if the GLB file is missing normal attributes
                 if (mesh.geometry) {
-                    mesh.geometry.computeVertexNormals();
+                    if (!mesh.geometry.attributes.normal) {
+                        console.log(`[VisionTwin GLB] Missing normals in model: ${url}. Generating fallback normals.`);
+                        mesh.geometry.computeVertexNormals();
+                    }
                     mesh.geometry.computeBoundingBox();
                     mesh.geometry.computeBoundingSphere();
                 }
 
                 if (mesh.material) {
                     const mat = mesh.material as THREE.MeshStandardMaterial;
-                    mat.side = THREE.DoubleSide; // Ensure double-sided rendering so thin structures don't fragment
+                    mat.side = THREE.DoubleSide; // Double-sided rendering fallback for thin geometries
                 }
             }
         });
@@ -36,6 +39,19 @@ function GltfComponent({ url }: Props) {
         let box = new THREE.Box3().setFromObject(clone);
         const size = new THREE.Vector3();
         box.getSize(size);
+
+        // 2. AUTO-LIMIT OVERSIZED MODELS:
+        // If model max dimension exceeds 25 meters/units, auto-scale down so it fits in the viewport
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const TARGET_MAX_VIEWPORT_SIZE = 25.0; // Max 25 meters
+        if (maxDim > TARGET_MAX_VIEWPORT_SIZE) {
+            const scaleFactor = TARGET_MAX_VIEWPORT_SIZE / maxDim;
+            console.log(`[VisionTwin GLB] Oversized model detected (${maxDim.toFixed(1)}m). Auto-limiting scale by factor ${scaleFactor.toFixed(3)} to fit viewport.`);
+            clone.scale.multiplyScalar(scaleFactor);
+            clone.updateMatrixWorld(true);
+            box.setFromObject(clone);
+            box.getSize(size);
+        }
 
         // Auto-detect Z-up export (common in Photogrammetry Aerial Scans / CAD / Drone GIS):
         // If vertical height Y is significantly larger than depth Z (flat plane standing vertically upright),
@@ -51,7 +67,7 @@ function GltfComponent({ url }: Props) {
         const center = new THREE.Vector3();
         box.getCenter(center);
 
-        // 2. Auto-center footprint on X, Z axes and ground bottom base at Y = 0 (floor grid level)
+        // 3. Auto-center footprint on X, Z axes and ground bottom base at Y = 0 (floor grid level)
         clone.position.x -= center.x;
         clone.position.z -= center.z;
         clone.position.y -= box.min.y; // Lowest point sits flat on ground grid Y=0
